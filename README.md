@@ -14,4 +14,4 @@ MMLの移植。
 ##参考
 [0.SiON 概要](http://keim.hatenablog.com/entry/20090917/p1)
 
-[Wondefl tag](http://wonderfl.net/tag/TinySiOPM)
+[Wonderfl Tag: TinySiOPM](http://wonderfl.net/tag/TinySiOPM)
