@@ -46,8 +46,10 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\MMLEditor.cs" />
      <Compile Include="Assets\Sample\AudioFilterRead.cs" />
      <Compile Include="Assets\Sample\Ball.cs" />
+     <Compile Include="Assets\UTinySiOPM\Sequencer.cs" />
      <Compile Include="Assets\UTinySiOPM\UTinySiOPM.cs" />
      <Compile Include="Assets\UTinySiOPM\UTinySiOPM_D.cs" />
  <Reference Include="UnityEngine.UI">

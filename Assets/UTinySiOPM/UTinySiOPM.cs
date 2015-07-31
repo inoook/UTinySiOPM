@@ -24,8 +24,9 @@ public class UTinySiOPM : MonoBehaviour{
 
 	private int _callbackFrams;
 
-	public int _bufferSize;
-	//_onSoundFrame:Function;
+	private int _bufferSize;
+	public delegate void DelegateOnSoundFrame();
+	public DelegateOnSoundFrame OnSoundFrame;
 
 
 	void Awake()
@@ -81,12 +82,15 @@ public class UTinySiOPM : MonoBehaviour{
 		float[] stereoOut = _output;
 		imax = _bufferSize<<1;
 		for (i=0; i<imax; i++) stereoOut[i] = 0;
+		
+		int c = 0;
 		for (imax=_callbackFrams; imax<=_bufferSize; imax+=_callbackFrams) {
-//			if (_onSoundFrame!=null) {
-//				_onSoundFrame();
-//			}
+			if (OnSoundFrame != null) {
+				OnSoundFrame();
+			}
 			tm = Osc._tm;
 			for (osc=tm.n; osc!=tm; osc=osc.update()) {
+				c++;
 				dph=_pitchTable[osc.pt];
 				ph=osc.ph;
 				mod=osc.mod+10; 
@@ -151,7 +155,13 @@ public class Osc {
 	static public Osc _fl=new Osc();
 	static public Osc _tm=new Osc();
 	static public Osc alloc(){ if(_fl.p==_fl)return new Osc(); Osc r=_fl.p;_fl.p=r.p;r.p.n=_fl;return r; }
-	public Osc into(Osc x){ p=x.p;n=x;p.n=this;n.p=this;return this; }
+	public Osc into(Osc x){ 
+		p = x.p;
+		n = x;
+		p.n = this;
+		n.p = this;
+		return this;
+	}
 	public Osc p, n, fl;
 	public int pt, len, ph;
 	public int tl, sw, dr;
@@ -169,14 +179,21 @@ public class Osc {
 	public Osc reset() { ph=0; pt=0; len=0; tl=3328; sw=0; dr=24; pan=0; ws=0; mod=0; _out=0; return this; }
 	public Osc activate(bool autoFree=false) { into(_tm); fl=(autoFree)?_fl:null; return this; }
 	public Osc inactivate() { 
-		tl=3328;
-		//if(!fl)return this;
-		if(fl != null) { return this; }
+		tl = 3328;
+		if(fl == null) { return this; }
 
-		Osc r=p; p.n=n; n.p=p; into(fl);
+		Osc r=p;
+		p.n=n;
+		n.p=p;
+		into(fl);
 		return r;
 	}
 	public bool isActive() { return (tl<3328); }
+
+	public override string ToString()
+	{
+		return "pt: "+pt + " len: "+len + " ph: "+ph + " / tl: "+tl + " sw: "+sw + " dr: "+dr +" wv: "+wv.Length + " / sh: "+sh+" mod: "+mod + " _out: "+_out+" pan:"+pan;
+	}
 }
 
 
