@@ -25,12 +25,13 @@ public class UTinySiOPM_D : MonoBehaviour{
 	private int _callbackFrams;
 
 	public int _bufferSize;
-	//_onSoundFrame:Function;
+	public delegate void DelegateOnSoundFrame();
+	public DelegateOnSoundFrame OnSoundFrame;
 
 
 	void Awake()
 	{
-		Init(2048, 2048);
+		Init(2048, 1024);
 	}
 
 	private void Init(int bufferSize=2048, int callbackFrams=1024) {
@@ -38,16 +39,16 @@ public class UTinySiOPM_D : MonoBehaviour{
 		double p, v;
 		int[] t;
 		int[] ft = new int[]{0,1,2,3,4,5,6,7,7,6,5,4,3,2,1,0};
-		for (i=0, p=0; i<192; i++, p+=0.00520833333)                            // create pitchTable[128*16]
-			for(v=System.Math.Pow(2, p)*12441.464342886, j=i; j<2048; v*=2, j+=192) _pitchTable[j] = (int)(v);
+		for (i=0, p=0; i<192; i++, p+=0.00520833333d)                            // create pitchTable[128*16]
+			for(v=System.Math.Pow(2, p)*12441.464342886d, j=i; j<2048; v*=2, j+=192) _pitchTable[j] = (int)(v);
 		for (i=0; i<32; i++) _pitchTable[i] = (i+1)<<6;                         // [0:31] for white noize
-		for (i=0, p=0.0078125; i<256; i+=2, p+=0.0078125)                       // create logTable[12*256*2]
-			for(v=System.Math.Pow(2, 13-p), j=i; j<3328; v*=0.5, j+=256) _logTable[j+1] = -(_logTable[j]=(int)(v));
+		for (i=0, p=0.0078125d; i<256; i+=2, p+=0.0078125d)                       // create logTable[12*256*2]
+			for(v=System.Math.Pow(2, 13-p), j=i; j<3328; v*=0.5d, j+=256) _logTable[j+1] = -(_logTable[j]=(int)(v));
 		for (i=3328; i<6144; i++) _logTable[i] = 0;                             // [3328:6144] is 0-fill area
-		for (i=0, p=0; i<129; i++, p+=0.01217671571) _panTable[i]=System.Math.Sin(p)*0.5;  // pan table;
-		for (t=Osc.createTable(10), i=0, p=0; i<1024; i++, p+=0.00613592315) t[i] = log(System.Math.Sin(p)); // sin=0
-		for (t=Osc.createTable(10), i=0, p=0.75f; i<1024; i++, p-=0.00146484375) t[i] = log(p);        // saw=1
-		for (t=Osc.createTable(5),  i=0; i<16; i++) t[i+16] = (t[i] = log(ft[i]*0.0625)) + 1;         // famtri=2
+		for (i=0, p=0; i<129; i++, p+=0.01217671571d) _panTable[i]=System.Math.Sin(p)*0.5;  // pan table;
+		for (t=Osc.createTable(10), i=0, p=0; i<1024; i++, p+=0.00613592315d) t[i] = log(System.Math.Sin(p)); // sin=0
+		for (t=Osc.createTable(10), i=0, p=0.75f; i<1024; i++, p-=0.00146484375d) t[i] = log(p);        // saw=1
+		for (t=Osc.createTable(5),  i=0; i<16; i++) t[i+16] = (t[i] = log(ft[i]*0.0625d)) + 1;         // famtri=2
 		for (t=Osc.createTable(15), i=0; i<32768; i++) t[i] = log(Random.value-0.5);                 // wnoize=3
 		for (i=0; i<8; i++) for (t=Osc.createTable(4), j=0; j<16; j++) t[j] = (j<=i) ? 192 : 193;     // pulse=4-11
 		_zero = new int[bufferSize];                             // allocate zero buffer
@@ -62,8 +63,8 @@ public class UTinySiOPM_D : MonoBehaviour{
 
 	// calculate index of logTable
 	static public int log(double n) {
-		return (n<0) ? ((n<-0.00390625) ? ((((int)(System.Math.Log(-n) * -184.66496523 + 0.5) + 1) << 1) + 1) : 2047)
-					 : ((n> 0.00390625) ? (( (int)(System.Math.Log( n) * -184.66496523 + 0.5) + 1) << 1)      : 2046);
+		return (n<0) ? ((n<-0.00390625d) ? ((((int)(System.Math.Log(-n) * -184.66496523d + 0.5) + 1) << 1) + 1) : 2047)
+					 : ((n> 0.00390625d) ? (( (int)(System.Math.Log( n) * -184.66496523d + 0.5) + 1) << 1)      : 2046);
 	}
 
 	// reset all oscillators
@@ -82,9 +83,9 @@ public class UTinySiOPM_D : MonoBehaviour{
 		imax = _bufferSize<<1;
 		for (i=0; i<imax; i++) stereoOut[i] = 0;
 		for (imax=_callbackFrams; imax<=_bufferSize; imax+=_callbackFrams) {
-//			if (_onSoundFrame!=null) {
-//				_onSoundFrame();
-//			}
+			if (OnSoundFrame != null) {
+				OnSoundFrame();
+			}
 			tm = Osc._tm;
 			for (osc=tm.n; osc!=tm; osc=osc.update()) {
 				dph=_pitchTable[osc.pt];
@@ -103,8 +104,8 @@ public class UTinySiOPM_D : MonoBehaviour{
 				}
 				osc.ph = ph;
 				if (osc._out==0) {
-					l = _panTable[64-osc.pan] * 0.0001220703125;
-					r = _panTable[64+osc.pan] * 0.0001220703125;
+					l = _panTable[64-osc.pan] * 0.0001220703125d;
+					r = _panTable[64+osc.pan] * 0.0001220703125d;
 					for (i=imax-_callbackFrams, j=i*2; i<imax; i++) {
 						stereoOut[j] += _out[i]*l; j++;
 						stereoOut[j] += _out[i]*r; j++;

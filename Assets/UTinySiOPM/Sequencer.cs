@@ -127,12 +127,13 @@ public class Track {
 	public void execute() {
 		if (--cnt <= 0) {
 			for (int i=0; i<100; i++) {
-				System.Text.RegularExpressions.Match res = _rex.Match(seq, _rex_lastIndex);
+				Match res = _rex.Match(seq, _rex_lastIndex);
 				_rex_lastIndex = res.Index +res.Length;
 
 				if (!res.Success) {
-					if (sgn == 1) { 
+					if (sgn > 0) { 
 						_rex_lastIndex = sgn; continue;
+						// loop
 					}else{ 
 						cnt = int.MaxValue; break;
 					}
@@ -146,9 +147,11 @@ public class Track {
 					osc.tl = tl;
 					break;
 				} else if (res.Groups[1].Value == "r") {
+					// space
 					cnt = (res.Groups[3].Value != "") ?  toInt(res.Groups[3].Value) : len;
 					break;
 				} else {
+					// effect
 					switch(res.Groups[1].Value){
 					case "k": dt  =  toInt(res.Groups[3].Value); break;
 					case "l": len = toInt(res.Groups[3].Value); break;

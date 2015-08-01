@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 // http://wonderfl.net/c/moSo
+// visual mml: http://benjaminsoule.fr/tools/vmml/
 
 public class MMLEditor : MonoBehaviour {
 
@@ -10,9 +12,31 @@ public class MMLEditor : MonoBehaviour {
 	public UTinySiOPM _module;
 
 	Sequencer _sequencer;
+	public int speed = 4;
+
+	public int samplerate = 44100;
+
+	void OnAudioRead(float[] data) {
+
+	}
+	void OnAudioSetPosition(int newPosition) {
+
+	}
 
 	// Use this for initialization
 	void Start () {
+		//AudioConfiguration config = new AudioConfiguration();
+		//config.dspBufferSize = 1024;
+		//AudioSettings.Reset(config);
+
+		Debug.Log(AudioSettings.GetConfiguration().sampleRate);
+		Debug.Log(AudioSettings.GetConfiguration().numRealVoices);
+		Debug.Log(AudioSettings.GetConfiguration().dspBufferSize);
+
+		AudioClip myClip = AudioClip.Create("null", samplerate * 2, 2, samplerate, true, OnAudioRead, OnAudioSetPosition);
+		AudioSource aud = GetComponent<AudioSource>();
+		aud.clip = myClip;
+		//aud.Play();
 		
 		mml+="#BS=r28$s10l4[3e8[22e]er<s2c12>s10brg]s1a36g12f+16s12e8[5e]l2egabl4ers2e20\n";
 		mml+="s10[[3e8[22e]er<s2c12>s10brg]e8[15e]gabf+8gae8eeegab\n";
@@ -34,6 +58,7 @@ public class MMLEditor : MonoBehaviour {
 		mml+="s64v3l2[512d]v12s6c+8v15c+2r22\n";
 		mml+="l8p5[8s6v16d16s10v8[14d]][4d]p3s4v12c+32;\n";
 		mml+="@0w32o4BD; @3o0SN; @3o0CY;\n";
+		mml+="\n";
 		mml+="#GT=r28$l4[3[3[s2e8s12e]ee]ers2b2<c10>brg]s1a36g12f+16s2e40re20\n";
 		mml+="[l4[3[3[s2e8s12e]ee]ers2b2<c10>brg][[s2e8s12e]ee]es1g16f+12e20s12eer\n";
 		mml+="s1l8[<c24c>b24b<d24d>g24g<c24c>b24b|a56b]a64<d64>]\n";
@@ -70,17 +95,19 @@ public class MMLEditor : MonoBehaviour {
 		mml+="g28f+g8d16grf+12gargrarb16<c+1d3rdr>g16<d+1e7dr>g12<cr>b|a52>]a64<d64>;\n";
 		mml+="v8o6k-1MAv6MBv8MC; v10o5k1MAv3MB2v10MC; v3p1o6r4MAv4MBv3MC;\n";
 
-		
+//		mml+="#MB=r20@2s1w12o9c64s4w-32o4[4c8]\n";
+//		mml+="@10s3w0o6l4;\n";
+//		mml+="MB;\n";
+
+		// t120v12o4l16@4@e1,0,6,0,0 /:8 v13c v8c v11c v8c @e1,0,15,0,0v13c @e1,0,6,0,0 v8c v11c v8c:/
 		_module.OnSoundFrame = onSoundFrame;
 
 		_sequencer = new Sequencer();
-		_sequencer.pos = 0;
-		_sequencer.speed = 2;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-
+		_sequencer.speed = speed;
 	}
 	public bool isPlay = false;
 	void OnAudioFilterRead(float[] data, int channels)
@@ -92,11 +119,11 @@ public class MMLEditor : MonoBehaviour {
 	void OnGUI()
 	{
 		GUILayout.BeginArea(new Rect(10,10,800,800));
-		List<Track> tracks = _sequencer.GetTracks();
-		GUILayout.Label("tracks: "+tracks.Count);
-		for(int i = 0; i < tracks.Count; i++){
-			GUILayout.Label(i + " : "+tracks[i].cnt);
-		}
+//		List<Track> tracks = _sequencer.GetTracks();
+//		GUILayout.Label("tracks: "+tracks.Count);
+//		for(int i = 0; i < tracks.Count; i++){
+//			GUILayout.Label(i + " : "+tracks[i].cnt);
+//		}
 		if( GUILayout.Button("Play") ){
 			Play();
 		}
@@ -107,10 +134,22 @@ public class MMLEditor : MonoBehaviour {
 
 	void Play()
 	{
+		Debug.Log("----- PLAY ------");
 		_module.reset();
-		string[] mmlstrs = _expandMML(mml);
-		_sequencer.mml = mmlstrs;
 
+		string[] mmlstrs = _expandMML(mml);
+		_sequencer.SetMML(mmlstrs);
+
+		_sequencer.pos = 0;//2600
+		_sequencer.speed = speed;
+
+//		_sequencer.SetMML("cccccc");
+//		_sequencer.SetMML("o4 c o5 c o6 c r c>c>c");
+//		_sequencer.SetMML("q8 cde8g^8 cde8g. cde32g...");
+
+		AudioSource aud = GetComponent<AudioSource>();
+		aud.Play();
+		
 		isPlay = true;
 	}
 
@@ -126,29 +165,23 @@ public class MMLEditor : MonoBehaviour {
 
 		List<string> list = new List<string>();
 		Dictionary<string, string> macro = new Dictionary<string, string>();
-		
-		string currentKey = "";
+
 		foreach (string seq in split) {
-			System.Text.RegularExpressions.Match res = System.Text.RegularExpressions.Regex.Match(seq, "^#([_A-Z][_A-Z0-9]*)=?(.*)");
+			Match res = Regex.Match(seq, "^#([_A-Z][_A-Z0-9]*)=?(.*)", RegexOptions.Multiline);
 			if (res.Success) {
-				currentKey = res.Groups[1].Value;
+				string currentKey = res.Groups[1].Value;
 				macro[currentKey] = res.Groups[2].Value;
 			} else {
-				System.Text.RegularExpressions.Match resR = System.Text.RegularExpressions.Regex.Match(seq, "[_A-Z][_A-Z0-9]*");
-				string s = "";
-				if (resR.Success) {
-					s = System.Text.RegularExpressions.Regex.Replace(seq, "[_A-Z][_A-Z0-9]*", GetReplaceMent(resR.Groups[0].Value, macro));
-				}
+				string s = System.Text.RegularExpressions.Regex.Replace(seq, "[_A-Z][_A-Z0-9]*", delegate(Match match)
+				{
+					string key = match.Groups[0].Value;
+					if(!macro.ContainsKey(key)){ return "null"; }
+					return macro[key];
+				});
 				list.Add(s);
 			}
 		}
 		return list.ToArray();
-	}
-
-	string GetReplaceMent(string key, Dictionary<string, string> macro)
-	{
-		if(!macro.ContainsKey(key)){ return "null"; }
-		return macro[key];
 	}
 
 }
