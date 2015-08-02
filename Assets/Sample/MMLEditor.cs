@@ -14,7 +14,11 @@ public class MMLEditor : MonoBehaviour {
 	Sequencer _sequencer;
 	public int speed = 4;
 
-	public int samplerate = 44100;
+	private int samplerate = 44100;
+	
+	AudioSource aud;
+
+	private bool isPlaying = false;
 
 	void OnAudioRead(float[] data) {
 
@@ -25,18 +29,22 @@ public class MMLEditor : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		//AudioConfiguration config = new AudioConfiguration();
-		//config.dspBufferSize = 1024;
-		//AudioSettings.Reset(config);
-
+		
+//		int bufferSize = 1024;
+//		AudioConfiguration config = AudioSettings.GetConfiguration();
+//		config.dspBufferSize = bufferSize; // best performance : 1024
+//		AudioSettings.Reset(config);
+//
 		Debug.Log(AudioSettings.GetConfiguration().sampleRate);
 		Debug.Log(AudioSettings.GetConfiguration().numRealVoices);
+		Debug.Log(AudioSettings.GetConfiguration().numVirtualVoices);
 		Debug.Log(AudioSettings.GetConfiguration().dspBufferSize);
+		Debug.Log(AudioSettings.GetConfiguration().speakerMode);
 
-		AudioClip myClip = AudioClip.Create("null", samplerate * 2, 2, samplerate, true, OnAudioRead, OnAudioSetPosition);
-		AudioSource aud = GetComponent<AudioSource>();
+
+		AudioClip myClip = AudioClip.Create("null", samplerate * 2, 2, samplerate, false, OnAudioRead, OnAudioSetPosition);
+		aud = GetComponent<AudioSource>();
 		aud.clip = myClip;
-		//aud.Play();
 		
 		mml+="#BS=r28$s10l4[3e8[22e]er<s2c12>s10brg]s1a36g12f+16s12e8[5e]l2egabl4ers2e20\n";
 		mml+="s10[[3e8[22e]er<s2c12>s10brg]e8[15e]gabf+8gae8eeegab\n";
@@ -99,36 +107,46 @@ public class MMLEditor : MonoBehaviour {
 //		mml+="@10s3w0o6l4;\n";
 //		mml+="MB;\n";
 
-		// t120v12o4l16@4@e1,0,6,0,0 /:8 v13c v8c v11c v8c @e1,0,15,0,0v13c @e1,0,6,0,0 v8c v11c v8c:/
+		
 		_module.OnSoundFrame = onSoundFrame;
-
 		_sequencer = new Sequencer();
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
 		_sequencer.speed = speed;
 	}
-	public bool isPlay = false;
+
 	void OnAudioFilterRead(float[] data, int channels)
 	{
-		if(isPlay){
-			_module.buffer(data, channels);
-		}
+		_module.buffer(data, channels);
 	}
+	
+	Vector2 scrollPosition;
 	void OnGUI()
 	{
-		GUILayout.BeginArea(new Rect(10,10,800,800));
+		GUILayout.BeginArea(new Rect(10,10,800,600));
 //		List<Track> tracks = _sequencer.GetTracks();
 //		GUILayout.Label("tracks: "+tracks.Count);
 //		for(int i = 0; i < tracks.Count; i++){
 //			GUILayout.Label(i + " : "+tracks[i].cnt);
 //		}
+		GUILayout.BeginHorizontal();
 		if( GUILayout.Button("Play") ){
 			Play();
 		}
-		mml = GUILayout.TextField(mml);
+		if( GUILayout.Button(isPlaying ? "||" : "-") ){
+			Pause();
+		}
+		if( GUILayout.Button("Stop") ){
+			Stop();
+		}
+		GUILayout.EndHorizontal();
 
+		scrollPosition = GUILayout.BeginScrollView(scrollPosition);
+		//GUILayout.Label(mml);
+		mml = GUILayout.TextArea(mml);
+		GUILayout.EndScrollView();
 		GUILayout.EndArea();
 	}
 
@@ -147,10 +165,27 @@ public class MMLEditor : MonoBehaviour {
 //		_sequencer.SetMML("o4 c o5 c o6 c r c>c>c");
 //		_sequencer.SetMML("q8 cde8g^8 cde8g. cde32g...");
 
-		AudioSource aud = GetComponent<AudioSource>();
 		aud.Play();
-		
-		isPlay = true;
+
+		isPlaying = true;
+	}
+
+	void Stop()
+	{
+		aud.Stop();
+		_sequencer.pos = 0;
+
+		isPlaying = false;
+	}
+	void Pause()
+	{
+		if( isPlaying ){
+			aud.Stop();
+			isPlaying = false;
+		}else{
+			aud.Play();
+			isPlaying = true;
+		}
 	}
 
 	void onSoundFrame()

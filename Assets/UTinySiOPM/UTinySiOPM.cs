@@ -27,11 +27,19 @@ public class UTinySiOPM : MonoBehaviour{
 	private int _bufferSize;
 	public delegate void DelegateOnSoundFrame();
 	public DelegateOnSoundFrame OnSoundFrame;
-	
+
 
 	void Awake()
 	{
-		Init(1024, 512);
+		int bufferSize = 1024;
+		AudioConfiguration config = AudioSettings.GetConfiguration();
+		config.dspBufferSize = bufferSize; // best performance : 1024
+		AudioSettings.Reset(config);
+
+		//Init(1024*2, 512*2);
+
+		//int bufferSize = AudioSettings.GetConfiguration().dspBufferSize;
+		Init(bufferSize, bufferSize/2);
 	}
 
 	private void Init(int bufferSize=1024, int callbackFrams=512) {

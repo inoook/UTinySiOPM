@@ -4,7 +4,6 @@ using System.Collections;
 
 public class AudioFilterRead : MonoBehaviour {
 
-	//public UTinySiOPM_D module;
 	public UTinySiOPM module;
 
 	public GameObject ballPrefab;
@@ -54,16 +53,16 @@ public class AudioFilterRead : MonoBehaviour {
 				int v = int.Parse(bshc[i][pointer].ToString());
 				if (v != 0) { 
 					//module.noteOn(tone[i, 0], (int)(v << (tone[i, 1])), tone[i, 2], tone[i, 3], tone[i, 4]);
-					module.noteOn(tone[i, 0], (int)(v << (tone[i, 1])), 0.5f, tone[i, 2], tone[i, 3], tone[i, 4]);
+					module.noteOn(tone[i, 0], (int)(v << (tone[i, 1])), 1.0f, tone[i, 2], tone[i, 3], tone[i, 4]);
 				}
 			}
 			if (mouseDown == 1) {
-				module.noteOn(pong[p] << 4, 64, 0.5f, 2, 8);
+				module.noteOn(pong[p] << 4, 64, 1.0f, 2, 8);
 				mouseDown = p+2;
 			}
 
 			if (bouns > 0) {
-				module.noteOn(pong[bouns>>5]<<4, bouns&31, 0.5f, 2, 8);
+				module.noteOn(pong[bouns>>5]<<4, bouns&31, 1.0f, 2, 8);
 				bouns = 0;
 			}
 
