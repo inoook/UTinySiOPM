@@ -8,8 +8,7 @@ as3のソフトウェアシンセSiONの原型「TinySiOPM」のUnity版。
 オリジナルの作者は[keim_at_si](https://twitter.com/keim_at_si) さん
 
 ##TODO
-音色がオリジナルと違うのは何故なのか？  
-MMLの移植。
+bufferSizeが1024がUnityだとmaxっぽい？
 
 ##参考
 [0.SiON 概要](http://keim.hatenablog.com/entry/20090917/p1)
