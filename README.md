@@ -17,3 +17,5 @@ MMLの移植。
 [Wonderfl Tag: TinySiOPM](http://wonderfl.net/tag/TinySiOPM)
 
 http://wonderfl.net/c/viWw
+
+[Unity でシンセを作る](https://gist.github.com/keijiro/3806478)
